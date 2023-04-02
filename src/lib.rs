@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_variables)]
 mod http;
+mod message;
 
 pub use http::RetryingHttpClient;
 use std::fs::File;
@@ -33,15 +34,3 @@ impl Client {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}
-
-enum Message {
-    CreateDataset,
-    LoadDataset,
-    Transformation(Transformation),
-}
-
-enum Transformation {
-    Map,
-    Filter,
-    Reduce,
-}
