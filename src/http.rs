@@ -1,14 +1,11 @@
+use hyper::client::{Client, connect::Connect};
+use hyper::{Body, Request, Response};
 use std::time::Duration;
-use hyper::client::Client;
-use hyper::client::connect::Connect;
-use hyper::Request;
-use hyper::Body;
-use hyper::Response;
 use tokio::time::timeout;
 
 pub struct RetryingHttpClient<C>
 where
-    C: Connect + Clone + Send + Sync
+    C: Connect + Clone + Send + Sync,
 {
     inner: Client<C>,
     num_retries: u8,
@@ -17,7 +14,7 @@ where
 
 impl<C> RetryingHttpClient<C>
 where
-    C: Connect + Clone + Send + Sync + 'static
+    C: Connect + Clone + Send + Sync + 'static,
 {
     pub fn new(connector: C) -> Self {
         Self {
@@ -40,8 +37,8 @@ where
                 Ok(result) => match result {
                     Ok(res) => return Ok(res),
                     Err(err) => return Err(Error::Hyper(err)),
-                }
-                Err(_) => continue
+                },
+                Err(_) => continue,
             }
         }
         Err(Error::Timeout)

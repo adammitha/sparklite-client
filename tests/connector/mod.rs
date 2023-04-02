@@ -5,15 +5,14 @@ use hyper::{
     Uri,
 };
 use tokio::io::{AsyncRead, AsyncWrite};
-use tower::Service;
 use tower::util::service_fn;
+use tower::Service;
 use turmoil::net::TcpStream;
 
 type Fut = Pin<Box<dyn Future<Output = Result<TurmoilConnection, std::io::Error>> + Send>>;
 
 pub fn connector(
-) -> impl Service<Uri, Response = TurmoilConnection, Error = std::io::Error, Future = Fut> + Clone
-{
+) -> impl Service<Uri, Response = TurmoilConnection, Error = std::io::Error, Future = Fut> + Clone {
     service_fn(|uri: Uri| {
         Box::pin(async move {
             let conn = TcpStream::connect(uri.authority().unwrap().as_str()).await?;

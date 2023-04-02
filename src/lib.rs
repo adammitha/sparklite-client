@@ -1,9 +1,9 @@
 #![allow(dead_code, unused_variables)]
 mod http;
 
+pub use http::RetryingHttpClient;
 use std::fs::File;
 use std::net::SocketAddr;
-pub use http::RetryingHttpClient;
 
 pub struct Client {
     server: SocketAddr,
@@ -11,9 +11,7 @@ pub struct Client {
 
 impl Client {
     pub fn new(server: SocketAddr) -> Self {
-        Self {
-            server,
-        }
+        Self { server }
     }
 
     pub fn create_data(dataset_id: &str, datatset: &File) -> Result<(), Error> {
@@ -34,8 +32,7 @@ impl Client {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
-}
+pub enum Error {}
 
 enum Message {
     CreateDataset,
