@@ -3,16 +3,21 @@ mod http;
 mod message;
 
 pub use http::RetryingHttpClient;
+use hyper::client::HttpConnector;
 use std::fs::File;
 use std::net::SocketAddr;
 
 pub struct Client {
+    inner: RetryingHttpClient<HttpConnector>,
     server: SocketAddr,
 }
 
 impl Client {
     pub fn new(server: SocketAddr) -> Self {
-        Self { server }
+        Self {
+            inner: RetryingHttpClient::new(HttpConnector::new()),
+            server,
+        }
     }
 
     pub fn create_data(dataset_id: &str, datatset: &File) -> Result<(), Error> {
