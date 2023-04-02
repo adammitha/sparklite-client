@@ -6,7 +6,7 @@ use tracing::debug;
 
 pub struct RetryingHttpClient<C>
 where
-    C: Connect + Clone + Send + Sync,
+    C: Connect + Clone + Send + Sync + 'static,
 {
     inner: Client<C>,
     num_retries: u8,
@@ -15,7 +15,7 @@ where
 
 impl<C> RetryingHttpClient<C>
 where
-    C: Connect + Clone + Send + Sync + 'static,
+    C: Connect + Clone + Send + Sync,
 {
     pub fn new(connector: C) -> Self {
         Self {

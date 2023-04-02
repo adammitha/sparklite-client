@@ -3,24 +3,32 @@ mod http;
 mod message;
 
 pub use http::RetryingHttpClient;
-use hyper::client::HttpConnector;
-use std::fs::File;
+use hyper::client::connect::Connect;
 use std::net::SocketAddr;
+use tokio::fs::File;
+use tokio_util::codec::{BytesCodec, FramedRead};
 
-pub struct Client {
-    inner: RetryingHttpClient<HttpConnector>,
+pub struct Client<C>
+where
+    C: Connect + Clone + Send + Sync + 'static,
+{
+    inner: RetryingHttpClient<C>,
     server: SocketAddr,
 }
 
-impl Client {
-    pub fn new(server: SocketAddr) -> Self {
+impl<C> Client<C>
+where
+    C: Connect + Clone + Send + Sync,
+{
+    pub fn new(server: SocketAddr, connector: C) -> Self {
         Self {
-            inner: RetryingHttpClient::new(HttpConnector::new()),
+            inner: RetryingHttpClient::new(connector),
             server,
         }
     }
 
-    pub fn create_data(dataset_id: &str, datatset: &File) -> Result<(), Error> {
+    pub async fn create_data(dataset_id: &str, dataset: File) -> Result<(), Error> {
+        let stream = FramedRead::new(dataset, BytesCodec::new());
         Ok(())
     }
 
