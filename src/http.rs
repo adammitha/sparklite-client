@@ -1,7 +1,8 @@
 use hyper::client::{Client, connect::Connect};
 use hyper::{Body, Request, Response};
 use std::time::Duration;
-use tokio::time::timeout;
+use tokio::time::{sleep, timeout};
+use tracing::debug;
 
 pub struct RetryingHttpClient<C>
 where
@@ -32,14 +33,18 @@ where
                 .uri(&uri)
                 .body(Body::empty())
                 .unwrap();
+            debug!("Sending {:?}, iteration: {}", request, i);
             let req_future = self.inner.request(request);
             match timeout(self.timeout, req_future).await {
                 Ok(result) => match result {
                     Ok(res) => return Ok(res),
                     Err(err) => return Err(Error::Hyper(err)),
                 },
-                Err(_) => continue,
+                Err(_) => (),
             }
+            let sleep_duration = Duration::from_secs(2u64.pow(i as _));
+            debug!("Sleeping for {:?} secs", sleep_duration);
+            sleep(sleep_duration).await;
         }
         Err(Error::Timeout)
     }
