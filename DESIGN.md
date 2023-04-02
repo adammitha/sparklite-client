@@ -13,6 +13,9 @@ The SparkLite server communicates with clients via a simple REST over HTTP proto
 
 ## Challenges
 
+### Rust
+
+
 ### Encoding functions on the wire
 SparkLite's core data analysis interface consists of higher-order functions like `map`, `filter`, and `reduce` that users can apply to the dataset of their choice. Because these functions consume a function as input, we needed to come up with a way for users to provide a function across a network connection. The original Spark framework delegates this task to the underlying Java Virtual Machine, which provides the ability to serialize arbitrary JVM bytecode onto the wire and execute it on a remote machine. Unfortunately, this solution is not available in languages that compile to native code such as Rust. Copying raw x86_64 machine code across the wire seems like a particularly crude and inelegant solution to this problem, to say nothing of the fact that we'd be sacrificing portability as well.
 

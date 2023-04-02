@@ -21,7 +21,7 @@ impl Client {
     }
 
     pub fn create_data(dataset_id: &str, datatset: &File) -> Result<(), Error> {
-        todo!()
+        Ok(())
     }
 
     pub fn load_data(dataset_id: &str) -> Result<(), Error> {
