@@ -1,33 +1,48 @@
-use reqwest::Response;
 use std::time::Duration;
+use hyper::client::Client;
+use hyper::client::connect::Connect;
+use hyper::Request;
+use hyper::Body;
+use hyper::Response;
+use tokio::time::timeout;
 
-pub struct RetryingHttpClient {
-    inner: reqwest::Client,
+pub struct RetryingHttpClient<C>
+where
+    C: Connect + Clone + Send + Sync
+{
+    inner: Client<C>,
     num_retries: u8,
     timeout: Duration,
 }
 
-impl RetryingHttpClient {
-    pub fn new() -> Self {
+impl<C> RetryingHttpClient<C>
+where
+    C: Connect + Clone + Send + Sync + 'static
+{
+    pub fn new(connector: C) -> Self {
         Self {
-            inner: reqwest::Client::new(),
+            inner: Client::builder().build(connector),
             num_retries: 4,
-            timeout: Duration::from_secs(1),
+            timeout: Duration::from_millis(100),
         }
     }
 
-    pub async fn get(&self, url: &str) -> Result<Response, Error> {
+    pub async fn get(&self, url: &str) -> Result<Response<Body>, Error> {
+        let uri: hyper::Uri = url.parse().unwrap();
         for i in 0..self.num_retries {
-            let result = self.inner.get(url).timeout(self.timeout).send().await;
-            match result {
-                Ok(res) => return Ok(res),
-                Err(err) => {
-                    if !err.is_timeout() {
-                        return Err(Error::Reqwest(err));
-                    }
+            let request = Request::builder()
+                .method("GET")
+                .uri(&uri)
+                .body(Body::empty())
+                .unwrap();
+            let req_future = self.inner.request(request);
+            match timeout(self.timeout, req_future).await {
+                Ok(result) => match result {
+                    Ok(res) => return Ok(res),
+                    Err(err) => return Err(Error::Hyper(err)),
                 }
+                Err(_) => continue
             }
-            tokio::time::sleep(Duration::from_secs(2u64.pow(i as _))).await;
         }
         Err(Error::Timeout)
     }
@@ -36,7 +51,7 @@ impl RetryingHttpClient {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Non-retryable http error")]
-    Reqwest(reqwest::Error),
+    Hyper(hyper::Error),
     #[error("Exhausted retries")]
     Timeout,
 }
