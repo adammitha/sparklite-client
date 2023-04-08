@@ -1,5 +1,5 @@
 use hyper::client::{Client, connect::Connect};
-use hyper::{Body, Request, Response};
+use hyper::{Body, Request, Response, Uri};
 use std::time::Duration;
 use tokio::time::{sleep, timeout};
 use tracing::debug;
@@ -25,8 +25,7 @@ where
         }
     }
 
-    pub async fn get(&self, url: &str) -> Result<Response<Body>, Error> {
-        let uri: hyper::Uri = url.parse().unwrap();
+    pub async fn get(&self, uri: Uri) -> Result<Response<Body>, Error> {
         for i in 0..self.num_retries {
             let request = Request::builder()
                 .method("GET")

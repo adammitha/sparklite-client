@@ -7,5 +7,5 @@ mod connector;
 async fn basic_test() {
     tracing_subscriber::fmt::init();
     let client = RetryingHttpClient::new(hyper::client::HttpConnector::new());
-    info!("{:?}", client.get("http://localhost:8000/").await.unwrap());
+    info!("{:?}", client.get("http://localhost:8000/".parse().unwrap()).await.unwrap());
 }

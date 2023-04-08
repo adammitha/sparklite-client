@@ -4,7 +4,7 @@ mod message;
 
 pub use http::RetryingHttpClient;
 use hyper::client::connect::Connect;
-use std::net::SocketAddr;
+use hyper::Uri;
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 
@@ -13,14 +13,14 @@ where
     C: Connect + Clone + Send + Sync + 'static,
 {
     inner: RetryingHttpClient<C>,
-    server: SocketAddr,
+    server: Uri,
 }
 
 impl<C> Client<C>
 where
     C: Connect + Clone + Send + Sync,
 {
-    pub fn new(server: SocketAddr, connector: C) -> Self {
+    pub fn new(server: Uri, connector: C) -> Self {
         Self {
             inner: RetryingHttpClient::new(connector),
             server,
