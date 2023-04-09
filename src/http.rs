@@ -2,7 +2,7 @@ use hyper::client::{connect::Connect, Client};
 use hyper::{Body, Request, Response, Uri};
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
-use tokio::time::{sleep, timeout};
+use tokio::time::timeout;
 use tracing::debug;
 
 pub struct RetryingHttpClient<C>
@@ -30,32 +30,36 @@ where
         for i in 0..self.num_retries {
             let request = Request::get(uri).body(Body::empty()).unwrap();
             let timeout_duration = self.timeout * 2u32.pow(i as _);
-            debug!("Sending {:?}, iteration: {}, timeout: {:?}", request, i, timeout_duration);
+            debug!(
+                "Sending {:?}, iteration: {}, timeout: {:?}",
+                request, i, timeout_duration
+            );
             let req_future = self.inner.request(request);
             match timeout(timeout_duration, req_future).await {
-                Ok(result) => match result {
-                    Ok(res) => return Ok(res),
-                    Err(err) => return Err(Error::Hyper(err)),
-                },
+                Ok(result) => return result.map_err(|err| Error::Hyper(err)),
                 Err(_) => (),
             }
         }
         Err(Error::Timeout)
     }
 
-    pub async fn post(&self, uri: &Uri, body: &mut tokio::fs::File) -> Result<Response<Body>, Error> {
+    pub async fn post(
+        &self,
+        uri: &Uri,
+        body: &mut tokio::fs::File,
+    ) -> Result<Response<Body>, Error> {
         let mut bytes = Vec::new();
         body.read_to_end(&mut bytes).await.unwrap();
         for i in 0..self.num_retries {
             let request = Request::post(uri).body(bytes.clone().into()).unwrap();
             let timeout_duration = self.timeout * 2u32.pow(i as _);
-            debug!("Sending {:?}, iteration: {}, timeout: {:?}", request, i, timeout_duration);
+            debug!(
+                "Sending {:?}, iteration: {}, timeout: {:?}",
+                request, i, timeout_duration
+            );
             let req_future = self.inner.request(request);
             match timeout(self.timeout, req_future).await {
-                Ok(result) => match result {
-                    Ok(res) => return Ok(res),
-                    Err(err) => return Err(Error::Hyper(err)),
-                },
+                Ok(result) => return result.map_err(|err| Error::Hyper(err)),
                 Err(_) => (),
             }
         }
