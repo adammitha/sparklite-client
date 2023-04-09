@@ -1,6 +1,7 @@
-use hyper::client::{Client, connect::Connect};
+use hyper::client::{connect::Connect, Client};
 use hyper::{Body, Request, Response, Uri};
 use std::time::Duration;
+use tokio::io::AsyncReadExt;
 use tokio::time::{sleep, timeout};
 use tracing::debug;
 
@@ -25,11 +26,30 @@ where
         }
     }
 
-    pub async fn get(&self, uri: Uri) -> Result<Response<Body>, Error> {
+    pub async fn get(&self, uri: &Uri) -> Result<Response<Body>, Error> {
         for i in 0..self.num_retries {
-            let request = Request::get(&uri)
-                .body(Body::empty())
-                .unwrap();
+            let request = Request::get(uri).body(Body::empty()).unwrap();
+            debug!("Sending {:?}, iteration: {}", request, i);
+            let req_future = self.inner.request(request);
+            match timeout(self.timeout, req_future).await {
+                Ok(result) => match result {
+                    Ok(res) => return Ok(res),
+                    Err(err) => return Err(Error::Hyper(err)),
+                },
+                Err(_) => (),
+            }
+            let sleep_duration = Duration::from_secs(2u64.pow(i as _));
+            debug!("Sleeping for {:?} secs", sleep_duration);
+            sleep(sleep_duration).await;
+        }
+        Err(Error::Timeout)
+    }
+
+    pub async fn post(&self, uri: &Uri, body: &mut tokio::fs::File) -> Result<Response<Body>, Error> {
+        let mut bytes = Vec::new();
+        body.read_to_end(&mut bytes).await.unwrap();
+        for i in 0..self.num_retries {
+            let request = Request::post(uri).body(bytes.clone().into()).unwrap();
             debug!("Sending {:?}, iteration: {}", request, i);
             let req_future = self.inner.request(request);
             match timeout(self.timeout, req_future).await {

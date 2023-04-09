@@ -4,9 +4,8 @@ mod message;
 
 pub use http::RetryingHttpClient;
 use hyper::client::connect::Connect;
-use hyper::Uri;
+use hyper::{Body, Response, Uri};
 use tokio::fs::File;
-use tokio_util::codec::{BytesCodec, FramedRead};
 
 pub struct Client<C>
 where
@@ -27,9 +26,8 @@ where
         }
     }
 
-    pub async fn create_data(dataset_id: &str, dataset: File) -> Result<(), Error> {
-        let stream = FramedRead::new(dataset, BytesCodec::new());
-        Ok(())
+    pub async fn create_data(&self, dataset_id: &str, dataset: &mut File) -> Result<Response<Body>, Error> {
+        self.inner.post(&self.server, dataset).await.map_err(|err| { Error::HttpError(err) })
     }
 
     pub fn load_data(dataset_id: &str) -> Result<(), Error> {
@@ -46,4 +44,7 @@ where
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error {}
+pub enum Error {
+    #[error("Error with http client")]
+    HttpError(http::Error),
+}
