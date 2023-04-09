@@ -22,25 +22,23 @@ where
         Self {
             inner: Client::builder().build(connector),
             num_retries: 4,
-            timeout: Duration::from_millis(100),
+            timeout: Duration::from_millis(200),
         }
     }
 
     pub async fn get(&self, uri: &Uri) -> Result<Response<Body>, Error> {
         for i in 0..self.num_retries {
             let request = Request::get(uri).body(Body::empty()).unwrap();
-            debug!("Sending {:?}, iteration: {}", request, i);
+            let timeout_duration = self.timeout * 2u32.pow(i as _);
+            debug!("Sending {:?}, iteration: {}, timeout: {:?}", request, i, timeout_duration);
             let req_future = self.inner.request(request);
-            match timeout(self.timeout, req_future).await {
+            match timeout(timeout_duration, req_future).await {
                 Ok(result) => match result {
                     Ok(res) => return Ok(res),
                     Err(err) => return Err(Error::Hyper(err)),
                 },
                 Err(_) => (),
             }
-            let sleep_duration = Duration::from_secs(2u64.pow(i as _));
-            debug!("Sleeping for {:?} secs", sleep_duration);
-            sleep(sleep_duration).await;
         }
         Err(Error::Timeout)
     }
@@ -50,7 +48,8 @@ where
         body.read_to_end(&mut bytes).await.unwrap();
         for i in 0..self.num_retries {
             let request = Request::post(uri).body(bytes.clone().into()).unwrap();
-            debug!("Sending {:?}, iteration: {}", request, i);
+            let timeout_duration = self.timeout * 2u32.pow(i as _);
+            debug!("Sending {:?}, iteration: {}, timeout: {:?}", request, i, timeout_duration);
             let req_future = self.inner.request(request);
             match timeout(self.timeout, req_future).await {
                 Ok(result) => match result {
@@ -59,9 +58,6 @@ where
                 },
                 Err(_) => (),
             }
-            let sleep_duration = Duration::from_secs(2u64.pow(i as _));
-            debug!("Sleeping for {:?} secs", sleep_duration);
-            sleep(sleep_duration).await;
         }
         Err(Error::Timeout)
     }

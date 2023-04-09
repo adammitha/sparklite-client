@@ -1,7 +1,6 @@
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    println!("Hello, world!");
     let client = sparklite_client::RetryingHttpClient::new(hyper::client::HttpConnector::new());
     println!(
         "{:?}",
@@ -13,4 +12,6 @@ async fn main() {
             .await
             .unwrap()
     );
+//     println!("{:?}", client.get(&"http://localhost:8000/".parse().unwrap()).await.unwrap());
 }
+
