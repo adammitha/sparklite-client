@@ -27,9 +27,7 @@ where
 
     pub async fn get(&self, uri: Uri) -> Result<Response<Body>, Error> {
         for i in 0..self.num_retries {
-            let request = Request::builder()
-                .method("GET")
-                .uri(&uri)
+            let request = Request::get(&uri)
                 .body(Body::empty())
                 .unwrap();
             debug!("Sending {:?}, iteration: {}", request, i);
