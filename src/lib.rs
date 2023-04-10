@@ -4,6 +4,7 @@ mod http;
 mod message;
 
 pub use http::RetryingHttpClient;
+pub use dataset::Dataset;
 use hyper::client::connect::Connect;
 use hyper::{Body, Response, Uri};
 use tokio::fs::File;
