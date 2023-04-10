@@ -1,4 +1,5 @@
 #![allow(dead_code, unused_variables)]
+mod dataset;
 mod http;
 mod message;
 
@@ -26,20 +27,25 @@ where
         }
     }
 
-    pub async fn create_data(&self, dataset_id: &str, dataset: &mut File) -> Result<Response<Body>, Error> {
-        self.inner.post(&self.server, dataset).await.map_err(|err| { Error::HttpError(err) })
+    pub async fn create_data(
+        &self,
+        dataset_id: &str,
+        dataset: &mut File,
+    ) -> Result<Response<Body>, Error> {
+        self.inner
+            .post(&self.server, dataset)
+            .await
+            .map_err(|err| Error::HttpError(err))
     }
 
-    pub fn load_data(dataset_id: &str) -> Result<(), Error> {
-        todo!()
-    }
-
-    pub fn map(dataset_id: &str) -> Result<(), Error> {
-        todo!()
-    }
-
-    pub fn reduce(dataset_id: &str) -> Result<(), Error> {
-        todo!()
+    pub async fn load_data(&self, dataset_id: &str) -> Result<Response<Body>, Error> {
+        let mut parts = self.server.clone().into_parts();
+        parts.path_and_query = Some(
+            format!("/load_dataset?dataset_id={}", dataset_id)
+                .try_into()
+                .unwrap(),
+        );
+        self.inner.get(&Uri::from_parts(parts).unwrap()).await.map_err(|err| Error::HttpError(err))
     }
 }
 
