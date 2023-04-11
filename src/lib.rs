@@ -3,8 +3,8 @@ mod dataset;
 mod http;
 mod message;
 
-pub use http::RetryingHttpClient;
 pub use dataset::Dataset;
+pub use http::RetryingHttpClient;
 use hyper::client::connect::Connect;
 use hyper::{Body, Response, Uri};
 use tokio::fs::File;
@@ -46,7 +46,10 @@ where
                 .try_into()
                 .unwrap(),
         );
-        self.inner.get(&Uri::from_parts(parts).unwrap()).await.map_err(|err| Error::HttpError(err))
+        self.inner
+            .get(&Uri::from_parts(parts).unwrap())
+            .await
+            .map_err(|err| Error::HttpError(err))
     }
 }
 
