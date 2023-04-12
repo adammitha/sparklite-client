@@ -8,14 +8,6 @@ pub enum Message {
     Transformation(Transformation),
 }
 
-impl Message {
-    pub fn load_data(id: &str) -> Self {
-        Self::LoadDataset {
-            id: String::from(id),
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize)]
 pub enum Transformation {
     Map,

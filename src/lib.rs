@@ -3,8 +3,9 @@ mod dataset;
 mod http;
 mod message;
 
-use crate::dataset::FilterPredicate;
+use crate::message::Message;
 pub use dataset::Dataset;
+pub use dataset::FilterPredicate;
 pub use http::RetryingHttpClient;
 use hyper::client::connect::Connect;
 use hyper::{Body, Response, Uri};
@@ -43,8 +44,14 @@ where
     pub async fn load_data(&self, dataset_id: &str) -> Result<Response<Body>, Error> {
         let mut parts = self.server.clone().into_parts();
         parts.path_and_query = Some("/load_data".try_into().unwrap());
+        let msg = Message::LoadDataset {
+            id: dataset_id.into(),
+        };
         self.inner
-            .get(&Uri::from_parts(parts).unwrap(), None)
+            .get(
+                &Uri::from_parts(parts).unwrap(),
+                Some(serde_json::to_string(&msg).unwrap()),
+            )
             .await
             .map_err(|err| Error::HttpError(err))
     }
@@ -55,8 +62,15 @@ where
         predicate: FilterPredicate,
     ) -> Result<Response<Body>, Error> {
         let mut parts = self.server.clone().into_parts();
-        parts.path_and_query = Some("/format".try_into().unwrap());
-        todo!()
+        let msg = Message::Transformation(message::Transformation::Filter(predicate));
+        parts.path_and_query = Some("/filter".try_into().unwrap());
+        self.inner
+            .get(
+                &Uri::from_parts(parts).unwrap(),
+                Some(serde_json::to_string(&msg).unwrap()),
+            )
+            .await
+            .map_err(|err| Error::HttpError(err))
     }
 }
 
