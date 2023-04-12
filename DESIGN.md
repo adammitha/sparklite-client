@@ -8,13 +8,18 @@ The `sparklite_client` library allows users to write applications that communica
 ### HTTP client
 The SparkLite server communicates with clients via a simple REST over HTTP protocol using JSON-encoded messages. The core of the SparkLite client library is a simple retrying http client that handles retries, backoffs, and timeouts for higher level componenets in the system. Furthermore, the http client is generic over the underlying connection which allows us to substitute different transport layers to suit the application's specific needs. It also makes it possible to test the client library with deterministic simulation tools like [`turmoil`](https://docs.rs/turmoil/latest/turmoil/).
 
-### Messages
+### SparkLite Client
+The SparkLite client module is responsible for constructing HTTP requests from the user's input, processing responses and handling errors gracefully on behalf of the consumer of the SparkLite library.
 
-
-## Challenges
-
+## Challenges and Lessons Learned
 ### Rust
+One of the biggest challenges that I encountered when implementing this project was learning Rust. Although I've been exposed to Rust before with personal projects and at work, this is the most complex project that I've worked on from scratch.
 
+We initially chose Rust for a couple of reasons: firstly, we wanted to take the opportunity to learn a language that was becoming increasingly prominent in the distributed systems community. Secondly, Rust's allows us to express our program's constraints and assumptions in the type system which ensures that many classes of errors get caught at compile time rather than runtime. In addition, the prohibition on mutable aliasing ensures that we avoid any nasty concurrency bugs that come along with multithreaded server implementations.
+
+In exchange for these correctness guarantees, getting Rust code to compile tends to be a far more arduous task than is less picky languages. We found ourselves spending hours decoding obscure error messages from the Rust compiler due to subtle issues with ownership or lifetimes. While this additional work almost certainly produced more reliable, robust, and fault-tolerant code at the end, it make it difficult to hack-together a simple proof of concept to validate our ideas in the first place.
+
+One aspect of the Rust ecosystem that we really appreciated was the robust ecosystem of third-party packages that the community has made available for building distributed systems. In particular, the `tokio` runtime and supporting packages make it really easy to stand up a networked client and server with very little boilerplate. Furthermore, the `serde` and `serde_json` crates make it easy to serialize our types across the network so we could easily share data structures between our client and server.
 
 ### Encoding functions on the wire
 SparkLite's core data analysis interface consists of higher-order functions like `map`, `filter`, and `reduce` that users can apply to the dataset of their choice. Because these functions consume a function as input, we needed to come up with a way for users to provide a function across a network connection. The original Spark framework delegates this task to the underlying Java Virtual Machine, which provides the ability to serialize arbitrary JVM bytecode onto the wire and execute it on a remote machine. Unfortunately, this solution is not available in languages that compile to native code such as Rust. Copying raw x86_64 machine code across the wire seems crude and inelegant, and sacrifices portability and long-term maintainability.
@@ -26,5 +31,3 @@ The second option would be to specify an execution environment that users must c
 The final option is to provide a predefined list of functions that users can execute, and only let them select certain arguments for that function. We would statically define these functions on the SparkLite server, pass in the user-provided arguments and then execute on the provided dataset. While this is the most restrictive option from the end user's perspective, it's likely to be the easiest option from an implementation perspective - we simply need to write some Rust functions and define a schema for specifying which function to execute, and with which arguments.
 
 Ultimately, we decided to go with a list of predefined functions that the user can choose from. Although it's the most limiting of the three options we considered, the implementation complexity fits well with the time constraints that we have for this project.
-
-## References
