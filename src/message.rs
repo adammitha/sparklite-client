@@ -6,6 +6,7 @@ pub enum Message {
     CreateDataset { id: String, data: Vec<u8> },
     LoadDataset { id: String },
     Transformation(Transformation),
+    GetDataset { id: String },
 }
 
 #[derive(Serialize, Deserialize)]

@@ -22,7 +22,7 @@ where
         Self {
             inner: Client::builder().build(connector),
             num_retries: 4,
-            timeout: Duration::from_millis(200),
+            timeout: Duration::from_millis(2000),
         }
     }
 
