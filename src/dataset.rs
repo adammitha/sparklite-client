@@ -4,14 +4,11 @@ pub struct Dataset {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum FilterPredicate<T>
-where
-    T: PartialEq + PartialOrd,
-{
-    Eq(T),
-    Lt(T),
-    Lte(T),
-    Gt(T),
-    Gte(T),
-    Ne(T),
+pub enum FilterPredicate {
+    Eq(String),
+    Lt(String),
+    Lte(String),
+    Gt(String),
+    Gte(String),
+    Ne(String),
 }

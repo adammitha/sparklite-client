@@ -8,7 +8,7 @@ async fn get() {
     println!(
         "{:?}",
         client
-            .get(&"http://localhost:8000/".parse().unwrap())
+            .get(&"http://localhost:8000/".parse().unwrap(), None)
             .await
             .unwrap()
     );

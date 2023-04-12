@@ -3,6 +3,7 @@ mod dataset;
 mod http;
 mod message;
 
+use crate::dataset::FilterPredicate;
 pub use dataset::Dataset;
 pub use http::RetryingHttpClient;
 use hyper::client::connect::Connect;
@@ -41,15 +42,21 @@ where
 
     pub async fn load_data(&self, dataset_id: &str) -> Result<Response<Body>, Error> {
         let mut parts = self.server.clone().into_parts();
-        parts.path_and_query = Some(
-            format!("/load_dataset?dataset_id={}", dataset_id)
-                .try_into()
-                .unwrap(),
-        );
+        parts.path_and_query = Some("/load_data".try_into().unwrap());
         self.inner
-            .get(&Uri::from_parts(parts).unwrap())
+            .get(&Uri::from_parts(parts).unwrap(), None)
             .await
             .map_err(|err| Error::HttpError(err))
+    }
+
+    pub async fn filter(
+        &self,
+        dataset_id: &str,
+        predicate: FilterPredicate,
+    ) -> Result<Response<Body>, Error> {
+        let mut parts = self.server.clone().into_parts();
+        parts.path_and_query = Some("/format".try_into().unwrap());
+        todo!()
     }
 }
 

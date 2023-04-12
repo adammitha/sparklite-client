@@ -26,9 +26,11 @@ where
         }
     }
 
-    pub async fn get(&self, uri: &Uri) -> Result<Response<Body>, Error> {
+    pub async fn get(&self, uri: &Uri, body: Option<String>) -> Result<Response<Body>, Error> {
         for i in 0..self.num_retries {
-            let request = Request::get(uri).body(Body::empty()).unwrap();
+            let request = Request::get(uri)
+                .body(body.clone().unwrap_or_default().into())
+                .unwrap();
             let timeout_duration = self.timeout * 2u32.pow(i as _);
             debug!(
                 "Sending {:?}, iteration: {}, timeout: {:?}",
