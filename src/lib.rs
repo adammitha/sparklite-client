@@ -42,15 +42,13 @@ where
     }
 
     pub async fn load_data(&self, dataset_id: &str) -> Result<String, Error> {
-        let mut parts = self.server.clone().into_parts();
-        parts.path_and_query = Some("/load_data".try_into().unwrap());
         let msg = Message::LoadDataset {
             id: dataset_id.into(),
         };
         let mut response = self
             .inner
             .get(
-                &Uri::from_parts(parts).unwrap(),
+                &self.build_uri("/load_data"),
                 Some(serde_json::to_string(&msg).unwrap()),
             )
             .await
@@ -70,12 +68,10 @@ where
         dataset_id: &str,
         predicate: FilterPredicate,
     ) -> Result<Response<Body>, Error> {
-        let mut parts = self.server.clone().into_parts();
         let msg = Message::Transformation(message::Transformation::Filter(predicate));
-        parts.path_and_query = Some("/filter".try_into().unwrap());
         self.inner
             .get(
-                &Uri::from_parts(parts).unwrap(),
+                &self.build_uri("/filter"),
                 Some(serde_json::to_string(&msg).unwrap()),
             )
             .await
@@ -83,18 +79,22 @@ where
     }
 
     pub async fn get_dataset(&self, dataset_id: &str) -> Result<Response<Body>, Error> {
-        let mut parts = self.server.clone().into_parts();
         let msg = Message::GetDataset {
             id: dataset_id.into(),
         };
-        parts.path_and_query = Some("/get_data".try_into().unwrap());
         self.inner
             .get(
-                &Uri::from_parts(parts).unwrap(),
+                &self.build_uri("/get_data"),
                 Some(serde_json::to_string(&msg).unwrap()),
             )
             .await
             .map_err(|err| Error::HttpError(err))
+    }
+
+    fn build_uri(&self, path: &str) -> Uri {
+        let mut parts = self.server.clone().into_parts();
+        parts.path_and_query = Some(path.try_into().unwrap());
+        Uri::from_parts(parts).unwrap()
     }
 }
 
