@@ -68,15 +68,24 @@ where
         &self,
         dataset_id: &str,
         predicate: FilterPredicate,
-    ) -> Result<Response<Body>, Error> {
+    ) -> Result<String, Error> {
         let msg = Message::Transformation(message::Transformation::Filter(predicate));
-        self.inner
+        let mut response = self
+            .inner
             .get(
                 &self.build_uri("/filter"),
                 Some(serde_json::to_string(&msg).unwrap()),
             )
             .await
-            .map_err(|err| Error::HttpError(err))
+            .map_err(|err| Error::HttpError(err))?;
+        Ok(std::str::from_utf8(
+            hyper::body::to_bytes(response.body_mut())
+                .await
+                .unwrap()
+                .as_ref(),
+        )
+        .unwrap()
+        .into())
     }
 
     pub async fn get_dataset(&self, dataset_id: &str) -> Result<Response<Body>, Error> {
