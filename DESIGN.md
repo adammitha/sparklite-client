@@ -31,3 +31,6 @@ The second option would be to specify an execution environment that users must c
 The final option is to provide a predefined list of functions that users can execute, and only let them select certain arguments for that function. We would statically define these functions on the SparkLite server, pass in the user-provided arguments and then execute on the provided dataset. While this is the most restrictive option from the end user's perspective, it's likely to be the easiest option from an implementation perspective - we simply need to write some Rust functions and define a schema for specifying which function to execute, and with which arguments.
 
 Ultimately, we decided to go with a list of predefined functions that the user can choose from. Although it's the most limiting of the three options we considered, the implementation complexity fits well with the time constraints that we have for this project.
+
+## Testing
+The primary method for testing this client is through the provided command-line interface.
