@@ -1,3 +1,4 @@
+use hyper::Uri;
 use rustyline::error::ReadlineError;
 use rustyline::history::FileHistory;
 use rustyline::{DefaultEditor, Editor};
@@ -16,10 +17,6 @@ filter <predicate> <argument>: Filter the dataset with the specified predicate a
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
-    // let res = client.load_data("test_data").await.unwrap();
-    // println!("{:?}", res);
-    // println!("{:?}", client.filter("test_data", sparklite_client::FilterPredicate::Eq("abc".into())).await.unwrap());
-    // println!("{:?}", client.load_data("123").await.unwrap());
     let mut cli = Cli::new(DefaultEditor::new()?);
     cli.repl().await;
     Ok(())
@@ -33,13 +30,21 @@ struct Cli {
 
 impl Cli {
     fn new(rl: Editor<(), FileHistory>) -> Self {
+        let args = std::env::args().collect::<Vec<String>>();
+        let uri: Uri = match args.get(1) {
+            Some(host) => Uri::builder()
+                .scheme("http")
+                .authority(host.clone())
+                .path_and_query("/")
+                .build()
+                .unwrap(),
+            _ => "http://localhost:8000".parse().unwrap(),
+        };
+        tracing::debug!("Connecting to {:?}", uri);
         Self {
             rl,
             dataset_id: None,
-            client: sparklite_client::Client::new(
-                "http://localhost:8000".parse().unwrap(),
-                hyper::client::HttpConnector::new(),
-            ),
+            client: sparklite_client::Client::new(uri, hyper::client::HttpConnector::new()),
         }
     }
 
