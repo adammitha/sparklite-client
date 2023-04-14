@@ -1,7 +1,7 @@
 # SparkLite Client Design
 
-## Introduction
-The `sparklite_client` library allows users to write applications that communicate with the SparkLite distributed data analysis system.
+## Introduction and Motivation
+SparkLite is a distributed data analysis system inspired by Spark. The `sparklite_client` library allows users to write applications that communicate with a SparkLite server.
 
 ## Components
 
@@ -10,6 +10,10 @@ The SparkLite server communicates with clients via a simple REST over HTTP proto
 
 ### SparkLite Client
 The SparkLite client module is responsible for constructing HTTP requests from the user's input, processing responses and handling errors gracefully on behalf of the consumer of the SparkLite library.
+
+The SparkLite client library defines several messages (see `src/message.rs`) that it can send to the SparkLite server. Because both the client and server are implemented in the same language, we were able to share these data structures between the two implementations to make communication simpler.
+
+The package also contains a simple CLI that demonstrates the features of the client library. It implements commands for loading a dataset and applying a simple filter to the test dataset. See the screencast at the bottom of the README for a demonstration of how to use the CLI.
 
 ## Challenges and Lessons Learned
 ### Rust
@@ -33,4 +37,13 @@ The final option is to provide a predefined list of functions that users can exe
 Ultimately, we decided to go with a list of predefined functions that the user can choose from. Although it's the most limiting of the three options we considered, the implementation complexity fits well with the time constraints that we have for this project.
 
 ## Testing
-The primary method for testing this client is through the provided command-line interface.
+The primary method for testing this client is through the provided command-line interface. See the following screencast for a demonstration.
+
+[![asciicast](https://asciinema.org/a/577478.svg)](https://asciinema.org/a/577478?t=27)
+
+The current server implementation only supports filtering based on the first column of the test dataset.
+
+## Lessons for the future
+Given the chance, I'd like to take more advantage of the `tokio` ecosystem which has a number of packages that abstract away a lot of the boilerplate associated with building distributed systems. For example, the `tower` crate has a number of `Layer`s that can be added onto your services, like timeouts, retries, and load balancing. Unfortunately, I struggled to use this library with my client due to the complexity of resolving the issues with Rust's borrow checker that arose when I attempted to use `tower` in the implementation of my http client, which forced me to implement these features myself.
+
+`tokio` also has an excellent library for testing distributed systems called `turmoil`. It gives users a synthetic transport layer they can plug into their client and server implementations, which allows them to simulate flaky or partitioned networks in a deterministic fashion which allows developers to easily surface and reproduce subtle bugs in their logic.
