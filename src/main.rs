@@ -54,7 +54,10 @@ impl Cli {
             let readline = self.rl.readline(">> ");
             match readline {
                 Ok(line) => match line.parse::<Command>() {
-                    Ok(c) => println!("{}", self.execute_command(c).await.unwrap()),
+                    Ok(c) => match self.execute_command(c).await {
+                        Ok(r) => println!("{}", r),
+                        Err(err) => println!("{}", err),
+                    },
                     Err(err) => println!("{}", err),
                 },
                 Err(ReadlineError::Interrupted) => {
@@ -73,11 +76,14 @@ impl Cli {
         }
     }
 
-    async fn execute_command(&self, comm: Command) -> anyhow::Result<String> {
+    async fn execute_command(&mut self, comm: Command) -> anyhow::Result<String> {
         match comm {
             Command::Help => Ok(String::from(HELP_TEXT)),
             Command::Create(_) => todo!(),
-            Command::Load(id) => Ok(self.client.load_data(&id).await?),
+            Command::Load(id) => {
+                self.dataset_id = Some(id.clone());
+                Ok(self.client.load_data(&id).await?)
+            }
             Command::Filter(pred) => {
                 if let Some(id) = &self.dataset_id {
                     Ok(self.client.filter(id, pred).await?)
