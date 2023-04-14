@@ -17,5 +17,5 @@ Once you have a working Rust toolchain and a SparkLite server is already running
 $ git checkout https://github.com/adammitha/sparklite-client
 $ cd sparklite-client
 $ cargo build # This may take several minutes to download and compile all of the project's dependencies
-$ cargo run <server-host> <server-port> # If the SparkLite server is running on the same machine, server-host will be localhost. The default port is 8000
+$ cargo run [<server-host> <server-port>] # If the SparkLite server is running on the same machine, server-host will be localhost. The default port is 8000
 ```

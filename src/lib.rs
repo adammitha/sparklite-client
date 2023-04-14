@@ -1,14 +1,12 @@
 #![allow(dead_code, unused_variables)]
-mod dataset;
 mod http;
 mod message;
 
 use crate::message::Message;
-pub use dataset::Dataset;
-pub use dataset::FilterPredicate;
 pub use http::RetryingHttpClient;
 use hyper::client::connect::Connect;
 use hyper::{Body, Response, Uri};
+pub use message::FilterPredicate;
 use tokio::fs::File;
 
 pub struct Client<C>
